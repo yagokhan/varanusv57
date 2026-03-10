@@ -20,6 +20,8 @@
 10. [Optimization — Optuna Density Score](#10-optimization--optuna-density-score)
 11. [Backtest Results (8-Fold WFV)](#11-backtest-results-8-fold-wfv)
 12. [Blind Test Results](#12-blind-test-results)
+    - [Blind Test 1 — Nov 2025 – Jan 2026](#blind-test-1--nov-01-2025--jan-24-2026)
+    - [Blind Test 2 — Jan 2026 – Mar 2026](#blind-test-2--jan-24-2026--mar-09-2026)
 13. [Strengths](#13-strengths)
 14. [Weaknesses](#14-weaknesses)
 15. [How to Run (Step-by-Step)](#15-how-to-run-step-by-step)
@@ -386,7 +388,9 @@ Backtest runs the 8 folds sequentially, starting with $5,000 capital per fold. E
 
 ## 12. Blind Test Results
 
-The blind test uses data from **November 01 2025 – January 24 2026** — a period the optimizer and backtest engine never saw. One final model is trained on the full Jan 2023 – Oct 2025 dataset, then traded on the blind window without any retraining.
+Both blind tests use data the optimizer and backtest engine **never saw**. One final model is trained on the full Jan 2023 – Oct 2025 dataset, then traded on each blind window without any retraining or parameter changes.
+
+### Blind Test 1 — Nov 01 2025 – Jan 24 2026
 
 | Metric | Value |
 |--------|-------|
@@ -397,14 +401,44 @@ The blind test uses data from **November 01 2025 – January 24 2026** — a per
 | **Long Trades** | 32 |
 | **Short Trades** | 38 |
 | **Overall Win Rate** | 42.9% |
-| **Long Win Rate** | **46.9%** |
+| **Long Win Rate** | **46.9%** ✅ |
 | **Short Win Rate** | 39.5% |
 | **Profit Factor** | 2.18 |
 | **Max Drawdown** | -9.9% |
 | **Sharpe Ratio** | **3.884** |
 | **Expectancy** | $44.72 per trade |
 
-**Interpretation:** The blind test validates that the WFV results are genuine and not an artifact of optimization. The system achieved 64% return in 85 days with a Sharpe of 3.88 on data it had never been exposed to.
+### Blind Test 2 — Jan 24 2026 – Mar 09 2026
+
+| Metric | Value |
+|--------|-------|
+| **Period** | Jan 24 2026 – Mar 09 2026 (~44 days) |
+| **Total Return** | **+32.7%** |
+| **Net Profit** | $1,633.32 on $5,000 |
+| **Total Trades** | 18 |
+| **Long Trades** | 11 |
+| **Short Trades** | 7 |
+| **Overall Win Rate** | 55.6% |
+| **Long Win Rate** | **45.5%** ✅ |
+| **Short Win Rate** | 71.4% |
+| **Profit Factor** | 3.31 |
+| **Max Drawdown** | -9.3% |
+| **Sharpe Ratio** | **5.122** |
+| **Expectancy** | $90.74 per trade |
+
+### Combined Blind Test Summary
+
+| | Blind Test 1 | Blind Test 2 |
+|---|---|---|
+| Period | Nov 01 2025 – Jan 24 2026 | Jan 24 2026 – Mar 09 2026 |
+| Return | +64.0% | +32.7% |
+| Win Rate | 42.9% | 55.6% |
+| Profit Factor | 2.18 | 3.31 |
+| Sharpe | 3.884 | 5.122 |
+| Max DD | -9.9% | -9.3% |
+| Trades | 70 | 18 |
+
+**Interpretation:** Both blind tests confirm that the WFV results are genuine and not an artifact of optimization. Across ~129 days of completely unseen data, the system achieved positive returns with controlled drawdown and a Sharpe above 3.8 in both periods. Blind Test 2 shows improving short-side performance (71.4% WR) and a higher overall win rate, suggesting the model's edge has not decayed into 2026.
 
 ---
 
@@ -514,7 +548,7 @@ Outputs:
 - `varanus/config/varanusv57_backtest_trades.csv` — individual trade records
 - `varanus/config/varanusv57_backtest_summary.csv` — per-fold performance stats
 
-### Step 4 — Run Blind Test
+### Step 4 — Run Blind Test 1
 
 Downloads Nov 2025 – Jan 2026 data, trains a final model on the full 2023–2025 dataset, and trades the blind window.
 
@@ -525,6 +559,18 @@ python run_blind_test_v57.py
 Outputs:
 - `varanus/config/varanusv57_blind_trades.csv`
 - `varanus/config/varanusv57_blind_summary.csv`
+
+### Step 5 — Run Blind Test 2 (Extended)
+
+Downloads Jan 2026 – Mar 2026 data and trades a second unseen window using the same final model.
+
+```bash
+python run_blind_test_v57_jan24_mar9.py
+```
+
+Outputs:
+- `varanus/config/varanusv57_blind2_trades.csv`
+- `varanus/config/varanusv57_blind2_summary.csv`
 
 ### Reproducing Results from Scratch
 
@@ -556,7 +602,8 @@ varanusv57/
 ├── fetch_all_data_v57.py                ← Step 1: Download Binance Vision data
 ├── run_dual_engine_optimization_v57.py  ← Step 2: 300-trial Optuna search
 ├── run_backtest_v57.py                  ← Step 3: 8-fold WFV backtest
-├── run_blind_test_v57.py                ← Step 4: Blind test Nov–Jan 2026
+├── run_blind_test_v57.py                ← Step 4: Blind test 1 (Nov 2025–Jan 2026)
+├── run_blind_test_v57_jan24_mar9.py     ← Step 5: Blind test 2 (Jan–Mar 2026)
 │
 ├── varanus/                             ← Core library
 │   ├── __init__.py
@@ -578,8 +625,10 @@ varanusv57/
 │   │   ├── best_params_v57.json         ← Optimized parameters (Trial #233)
 │   │   ├── varanusv57_backtest_trades.csv   ← 629 backtest trades
 │   │   ├── varanusv57_backtest_summary.csv  ← Per-fold performance
-│   │   ├── varanusv57_blind_trades.csv      ← 70 blind test trades
-│   │   └── varanusv57_blind_summary.csv     ← Blind test performance
+│   │   ├── varanusv57_blind_trades.csv      ← 70 blind test 1 trades (Nov–Jan)
+│   │   ├── varanusv57_blind_summary.csv     ← Blind test 1 performance
+│   │   ├── varanusv57_blind2_trades.csv     ← 18 blind test 2 trades (Jan–Mar)
+│   │   └── varanusv57_blind2_summary.csv    ← Blind test 2 performance
 │   │
 │   └── data/
 │       └── cache/           ← Parquet files (generated by fetch script)
@@ -628,7 +677,7 @@ varanusv57/
 
 ## License & Disclaimer
 
-This repository is for educational and research purposes. Past backtest performance does not guarantee future results. Cryptocurrency trading involves substantial risk of loss. The blind test results (+64% in 85 days) are from a single unseen period and should not be extrapolated as expected live performance.
+This repository is for educational and research purposes. Past backtest performance does not guarantee future results. Cryptocurrency trading involves substantial risk of loss. The blind test results (+64% and +32.7% across two unseen periods) are from limited windows and should not be extrapolated as expected live performance.
 
 ---
 
